@@ -108,3 +108,18 @@ class CompressionParameter(nn.Parameter):
             self.requires_grad = True
             self.register_hook(lambda grad: compression_lr_multiplier * grad)
             self.requires_grad = requires_grad
+
+class _NNCFFunctionalMixin:
+    op_func_name = ""
+    target_weight_dim_for_compression = 0
+    _custom_forward_fn = None
+    ignored_algorithms = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _NNCFFunctionalMixin.add_mixin_fields(self)
+
+    @staticmethod
+    def add_mixin_fields(obj):
+        obj.pre_ops = nn.ModuleDict()
+        obj.post_ops = nn.ModuleDict()

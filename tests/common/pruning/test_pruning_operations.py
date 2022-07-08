@@ -445,3 +445,32 @@ def test_reshape_is_last_op(node_type):
         prev_node.data['output_mask'] = output_mask
         METATYPES_MAP[node_type]['ops'].mask_propagation(reshape_node, graph, NPNNCFTensorProcessor)
         assert reshape_node.data['output_mask'] is None
+
+
+def test_pad_pruning_ops():
+    graph = NNCFGraph()
+    conv_op = graph.add_nncf_node('conv_op', 'conv', dummy_types.DummyConvMetatype)
+    pad_attributes = PadLayerAttributes(padding=[1, 1], value=0)
+
+    pad_op = graph.add_nncf_node('pad', dummy_types.DummyPadMetatype.name, 
+                                 dummy_types.DummyPadMetatype,
+                                 layer_attributes=pad_attributes)
+
+    graph.add_edge_between_nncf_nodes(from_node_id=conv_op.node_id,
+                                      to_node_id=pad_op.node_id,
+                                      tensor_shape=[10]*2,
+                                      input_port_id=0,
+                                      output_port_id=0,
+                                      dtype=Dtype.FLOAT)
+
+    # Check pad layer always accep pruned input
+    assert dummy_types.PadPruningOp.accept_pruned_input(pad_op)
+
+    mask = NPNNCFTensor(np.ones((10,)))
+    conv_op = graph.get_node_by_id(conv_op.node_id)
+    conv_op.data['output_mask'] = mask
+    MaskPropagationAlgorithm(graph, dummy_types.DUMMY_PRUNING_OPERATOR_METATYPES,
+                             NPNNCFTensorProcessor).mask_propagation()
+
+    pad_op = graph.get_node_by_id(pad_op.node_id)
+    assert np.all(pad_op.data['output_mask'] == mask)

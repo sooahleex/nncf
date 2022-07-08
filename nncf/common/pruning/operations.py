@@ -17,6 +17,7 @@ from nncf.common.graph import NNCFGraph
 from nncf.common.graph import NNCFNode
 from nncf.common.pruning.tensor_processor import NNCFPruningBaseTensorProcessor
 from nncf.common.pruning.utils import is_grouped_conv
+from nncf.common.pruning.utils import is_zero_pad
 from nncf.common.pruning.utils import get_input_masks
 from nncf.common.pruning.utils import is_prunable_depthwise_conv
 from nncf.common.pruning.utils import identity_mask_propagation
@@ -299,3 +300,18 @@ class StopMaskForwardPruningOp(BasePruningOp):
     def mask_propagation(cls, node: NNCFNode, graph: NNCFGraph,
                          tensor_processor: Type[NNCFPruningBaseTensorProcessor]) -> None:
         node.data['output_mask'] = None
+
+class PadPruningOp(BasePruningOp) :
+    @classmethod
+    def accept_pruned_input(cls, node: NNCFNode) -> bool:
+        if is_zero_pad(node) and node.layer_attributes.mode == 'constant':
+            return True
+        return False
+
+    @classmethod
+    def mask_propagation(cls, node: NNCFNode, graph: NNCFGraph, 
+                         tensor_processor: Type[NNCFPruningBaseTensorProcessor]):
+        if cls.accept_pruned_input(node):
+            identity_mask_propagation(node, graph)
+        else:
+            node.data['output_mask'] = None

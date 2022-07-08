@@ -187,3 +187,17 @@ class ReshapeLayerAttributes(BaseLayerAttributes):
                  output_shape: List[int]):
         self.input_shape = input_shape
         self.output_shape = output_shape
+
+class PadLayerAttributes(BaseLayerAttributes):
+    """
+    This class stores attributes of pad modules/layers
+    that are useful for some algorithms.
+    """
+
+    def __init__(self,
+                 pad: tuple,
+                 value: int,
+                 mode: str='constant'):
+        self.pad = pad
+        self.value = value
+        self.mode = mode

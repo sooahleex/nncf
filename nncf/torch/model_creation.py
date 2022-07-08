@@ -117,7 +117,8 @@ def create_compressed_model(model: Module,
         if dump_graphs and is_main_process():
             compressed_model_graph = compressed_model.get_graph()
             compressed_model_graph.visualize_graph(osp.join(config.get("log_dir", "."), "compressed_graph.dot"))
-
+    compressed_model_graph = compressed_model.get_graph()
+    compressed_model_graph.visualize_graph(osp.join(".", "test_graph.dot"))
     synchronize_all_processes_in_distributed_mode()
     return compression_ctrl, compressed_model
 

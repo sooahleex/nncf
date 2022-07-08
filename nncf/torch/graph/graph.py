@@ -18,6 +18,7 @@ from nncf.common.graph import NNCFGraph
 from nncf.common.graph import NNCFNode
 from nncf.common.graph import NNCFNodeName
 from nncf.torch.dynamic_graph.scope import Scope
+from nncf.torch.dynamic_graph.context import TracingContext
 from nncf.torch.graph.transformations.commands import PTTargetPoint
 
 

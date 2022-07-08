@@ -15,6 +15,7 @@ import copy
 import torch
 
 from torch import nn
+import torch.nn.functional as F
 
 from nncf.config import NNCFConfig
 from tests.torch.test_models.pnasnet import CellB
@@ -728,6 +729,21 @@ class NASnetBlock(nn.Module):
         x = self.cell(x)
         return x
 
+class PadModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = create_conv(in_channels=1, out_channels=3, kernel_size=2)
+        self.conv2 = create_conv(in_channels=3, out_channels=1, kernel_size=3)
+        self.pad2 = nn.ZeroPad2d((1, 1, 1, 1))
+        self.conv3 = create_conv(1, 1, 1)
+    
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.pad(x, pad=(1, 1), value=0)
+        x = self.conv2(x)
+        x = self.pad2(x)
+        x = self.conv3(x)
+        return x
 
 def get_basic_pruning_config(input_sample_size=None) -> NNCFConfig:
     if input_sample_size is None:

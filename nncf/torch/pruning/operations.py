@@ -58,7 +58,8 @@ from nncf.torch.graph.operator_metatypes import (
     PTSubMetatype,
     PTSumMetatype,
     PTTanhMetatype,
-    PTReshapeMetatype
+    PTReshapeMetatype,
+    PTPadMetatype,
 )
 from nncf.common.pruning.operations import (
     InputPruningOp,
@@ -72,7 +73,8 @@ from nncf.common.pruning.operations import (
     ConcatPruningOp,
     ElementwisePruningOp,
     ReshapePruningOp,
-    StopMaskForwardPruningOp
+    StopMaskForwardPruningOp,
+    PadPruningOp
 )
 
 from nncf.common.pruning.utils import PruningOperationsMetatypeRegistry
@@ -377,6 +379,11 @@ class PTElementwisePruningOp(ElementwisePruningOp, PTPruner):
 
             nncf_logger.info('Pruned Elementwise {} by input mask. Old num features: {}, new num features:'
                              ' {}.'.format(node.data['key'], old_num_clannels, new_num_channels))
+
+
+@PT_PRUNING_OPERATOR_METATYPES.register('pad')
+class PTPadPruningOP(PadPruningOp, PTPruner):
+    subtypes = [PTPadMetatype]
 
 
 @PT_PRUNING_OPERATOR_METATYPES.register('stop_propagation_ops')

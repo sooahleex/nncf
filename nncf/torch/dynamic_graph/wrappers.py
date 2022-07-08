@@ -25,9 +25,10 @@ from torch.nn import ConvTranspose2d
 from torch.nn import ConvTranspose3d
 from torch.nn import DataParallel
 from torch.nn import Linear
+from torch.nn import ZeroPad2d
 from torch.nn import Module as TorchModule
 
-from nncf.common.graph.layer_attributes import BaseLayerAttributes
+from nncf.common.graph.layer_attributes import BaseLayerAttributes, PadLayerAttributes
 from nncf.common.graph.layer_attributes import ConvolutionLayerAttributes
 from nncf.common.graph.layer_attributes import GenericWeightedLayerAttributes
 from nncf.common.graph.layer_attributes import GroupNormLayerAttributes
@@ -209,19 +210,25 @@ def _collect_module_attrs_and_ignored_algorithms(ctx: TracingContext,
         if curr_module is None:
             raise RuntimeError("Operation {} requires module attributes, "
                                "but it was executed outside any module".format(op_name))
-        layer_attrs = _get_layer_attributes(curr_module, op_name)
+        layer_attrs = _get_layer_attributes(curr_module, op_name, ctx.pad, ctx.pad_value, ctx.pad_mode)
         if isinstance(curr_module, _NNCFModuleMixin):
             ignored_algos = deepcopy(curr_module.ignored_algorithms)
     return layer_attrs, ignored_algos
 
 
-def _get_layer_attributes(module: TorchModule, operator_name: str) -> BaseLayerAttributes:
+def _get_layer_attributes(module: TorchModule, operator_name: str,
+                          pad:tuple=None, value:int=None, mode:str=None) -> BaseLayerAttributes:
     if operator_name == "group_norm":
         return GroupNormLayerAttributes(
             module.weight.requires_grad,
             module.num_channels,
             module.num_groups
         )
+    if operator_name == 'pad':
+        if mode is not 'constant':
+            pass
+        return PadLayerAttributes(pad=pad, value=value, mode=mode)
+
     if isinstance(module, (Conv1d, Conv2d, Conv3d)):
         return ConvolutionLayerAttributes(weight_requires_grad=module.weight.requires_grad,
                                           in_channels=module.in_channels,

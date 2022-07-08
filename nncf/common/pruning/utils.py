@@ -28,6 +28,7 @@ from nncf.common.graph import NNCFGraph
 from nncf.common.graph import NNCFNode
 from nncf.common.graph import NNCFNodeName
 from nncf.common.graph.layer_attributes import LinearLayerAttributes
+from nncf.common.graph.layer_attributes import PadLayerAttributes
 from nncf.common.graph.layer_attributes import ConvolutionLayerAttributes
 from nncf.common.graph.operator_metatypes import OperatorMetatype
 from nncf.common.pruning.clusterization import Cluster
@@ -41,6 +42,8 @@ def is_grouped_conv(node: NNCFNode) -> bool:
     return isinstance(node.layer_attributes, ConvolutionLayerAttributes) \
            and node.layer_attributes.groups != 1
 
+def is_zero_pad(node: NNCFNode) -> bool:
+    return isinstance(node.layer_attributes, PadLayerAttributes) and node.layer_attributes.value == 0
 
 def get_sources_of_node(nncf_node: NNCFNode, graph: NNCFGraph, sources_types: List[str]) -> List[NNCFNode]:
     """

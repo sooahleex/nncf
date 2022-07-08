@@ -284,6 +284,45 @@ class NNCFConvTranspose3d(_NNCFModuleMixin, nn.ConvTranspose3d):
         nncf_conv_transpose3d = align_module_internals(module, nncf_conv_transpose3d)
         return nncf_conv_transpose3d
 
+# class NNCFZeroPad2d(_NNCFModuleMixin, nn.ZeroPad2d):
+#     op_func_name = "pad"
+
+#     @staticmethod
+#     def from_module(module):
+#         assert module.__class__.__name__ == nn.ZeroPad2d.__name__
+#         nncf_pad = NNCFZeroPad2d(module.padding)
+#         nncf_pad = align_module_internals(module, nncf_pad)
+#         return nncf_pad
+
+#     def _custom_forward_fn(self, input_):
+#         proxy_padding = self.padding
+#         return self._pad_forward_proxy(input_, proxy_padding)
+
+#     def _pad_forward_proxy(self, input_, padding):
+#         value = 0 # ZeroPad
+#         def _reverse_tuple(t):
+#             return tuple(x for x in reversed(t))
+#         return F.pad(input_, pad=_reverse_tuple(padding), value=value)
+
+# class NNCFPad2d(_NNCFModuleMixin, F):
+#     op_func_name = "pad"
+
+#     @staticmethod
+#     def from_module(module, pad):
+#         assert module.__class__.__name__ == F.pad.__name__
+#         nncf_pad = NNCFPad2d(module.padding, module.value)
+#         nncf_pad = align_module_internals(module, nncf_pad)
+#         return nncf_pad
+
+#     def _custom_forward_fn(self, input_):
+#         proxy_padding = self.padding
+#         proxy_value = self.value
+#         return self._pad_forward_proxy(input_, proxy_padding, proxy_value)
+
+#     def _pad_forward_proxy(self, input_, padding, value):
+#         def _reverse_tuple(t):
+#             return tuple(x for x in reversed(t))
+#         return F.pad(input_, pad=_reverse_tuple(padding), value=value)
 
 class NNCFEmbedding(_NNCFModuleMixin, nn.Embedding):
     op_func_name = "embedding"
@@ -330,7 +369,10 @@ NNCF_MODULES_DICT = {
     NNCFConvTranspose2d: nn.ConvTranspose2d,
     NNCFConvTranspose3d: nn.ConvTranspose3d,
     NNCFEmbedding: nn.Embedding,
-    NNCFEmbeddingBag: nn.EmbeddingBag
+    NNCFEmbeddingBag: nn.EmbeddingBag,
+    # NNCFZeroPad2d: nn.ZeroPad2d,
+    # NNCFConstantPad2d: nn.ConstantPad2d,
+    # NNCFPad2d: F.Pad
 }
 
 NNCF_MODULES_MAP = {k.__name__: v.__name__ for k, v in NNCF_MODULES_DICT.items()}

@@ -82,6 +82,11 @@ class TracingContext:
 
         self._trace_dynamic_graph = False
 
+        # PAD PARAMS
+        self.pad = None
+        self.pad_value = None
+        self.pad_mode = None
+
         # ELASTIC DEPTH PARAMS
         self.elastic_depth = False
         self.skipped_blocks = []
@@ -223,6 +228,7 @@ class TracingContext:
                 op_inputs[input_arg_to_process] = hook(op_inputs[input_arg_to_process])
         self._threading.thread_local.num_nested_hooks -= 1
         self.in_operator = in_op
+        self.set_pad_params(op_address, op_inputs)
         return op_inputs
 
     def register_post_hooks(self, fn_list: List[Callable], op_address: OperationAddress):
@@ -392,6 +398,19 @@ class TracingContext:
                     self.skipped_blocks = blocks
             self._ordinals_ids = ordinal_ids
 
+
+    def set_pad_params(self, op_address, op_inputs):
+        op_name = op_address.operator_name
+        if op_name == 'pad':
+            op_args = op_inputs.op_args
+            op_kwargs = op_inputs.op_kwargs
+            if len(op_args)>1:
+                self.pad = op_args[1]
+                self.pad_mode = op_args[2]
+                self.pad_value = op_args[3]
+            else:
+                self.pad = op_kwargs['pad']
+                self.pad_value = op_kwargs['value']
 
 @contextmanager
 def no_nncf_trace():

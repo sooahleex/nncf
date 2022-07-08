@@ -146,3 +146,4 @@ class DummyReshapePruningOp(ReshapePruningOp):
 @DUMMY_PRUNING_OPERATOR_METATYPES.register(DummyFlattenMetatype.name)
 class DummyFlattenPruningOp(FlattenPruningOp):
     additional_types = [DummyFlattenMetatype.name]
+

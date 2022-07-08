@@ -503,7 +503,8 @@ class PTMaxUnpool3dMetatype(PTOperatorMetatype):
 class PTPadMetatype(PTOperatorMetatype):
     name = "PadOp"
     module_to_function_names = {
-        NamespaceTarget.TORCH_NN_FUNCTIONAL: ["pad"]
+        NamespaceTarget.TORCH_NN_FUNCTIONAL: ["pad"],
+        NamespaceTarget.TORCH: ["ConstantPad2d", "ZeroPad2d"]
     }
 
 

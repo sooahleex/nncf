@@ -348,17 +348,6 @@ class ReshapePruningOp(BasePruningOp):
             out_idx += 1
         return True
 
-    @staticmethod
-    def _is_not_adding_batch_dims(node: NNCFNode):
-        input_shape = node.layer_attributes.input_shape
-        output_shape = node.layer_attributes.output_shape
-
-        for inp_val, out_val in zip(input_shape, output_shape):
-            if inp_val != 1 and out_val == 1:
-                return False
-            else:
-                return True
-
     @classmethod
     def accept_pruned_input(cls, node: NNCFNode) -> bool:
         if node.layer_attributes is None:
@@ -371,7 +360,7 @@ class ReshapePruningOp(BasePruningOp):
         if cls.accept_pruned_input(node):
             if cls._is_flatten(node):
                 FlattenPruningOp.mask_propagation(node, graph, tensor_processor)
-            elif cls._is_not_mixing_dim(node) and cls._is_not_adding_batch_dims(node):
+            elif cls._is_not_mixing_dim(node):
                 identity_mask_propagation(node, graph)
             else:
                 node.data['output_mask'] = None

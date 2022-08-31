@@ -13,8 +13,6 @@
 
 from typing import Optional, List, Type, Dict
 
-import numpy as np
-
 from nncf.common.graph import NNCFGraph
 from nncf.common.graph import NNCFNode
 from nncf.common.pruning.tensor_processor import NNCFPruningBaseTensorProcessor
@@ -320,19 +318,46 @@ class ReshapePruningOp(BasePruningOp):
         return len(node.layer_attributes.output_shape) == 2
 
     @staticmethod
-    def _is_not_mixing_dim(node: NNCFNode, graph) -> bool:
-        input_shape = node.layer_attributes.input_shape
+    def _is_not_mixing_dim(node: NNCFNode) -> bool:
+        def _check_dim_splitted(dim_from: int, dims_to: List[int],
+                                dims_to_start_idx: int):
+            idx = dims_to_start_idx
+            if dim_from <= dims_to[idx]:
+                return (True, idx)
+            accum = dims_to[idx]
+            while accum < dim_from:
+                idx += 1
+                accum += output_shape[idx]
+            if accum > dim_from:
+                return (False, idx)
+            return (True, idx)
 
-        output_edges = graph.get_output_edges(node)
-        if not output_edges:
-            return True
+        input_shape = node.layer_attributes.input_shape
         output_shape = node.layer_attributes.output_shape
 
-        if len(input_shape)==len(output_shape) and set(input_shape)==set(output_shape):
-            input_shape_idx = np.argsort(input_shape)
-            output_shape_idx = np.argsort(output_shape)
-            return np.allclose(input_shape_idx, output_shape_idx)
+        inp_idx = 0
+        out_idx = 0
+        while (inp_idx < len(input_shape) and out_idx < len(output_shape)):
+            res, out_idx = _check_dim_splitted(input_shape[inp_idx], output_shape, out_idx)
+            if not res:
+                return False
+            res, inp_idx = _check_dim_splitted(output_shape[out_idx], input_shape, inp_idx)
+            if not res:
+                return False
+            inp_idx += 1
+            out_idx += 1
         return True
+
+    @staticmethod
+    def _is_not_adding_batch_dims(node: NNCFNode):
+        input_shape = node.layer_attributes.input_shape
+        output_shape = node.layer_attributes.output_shape
+
+        for inp_val, out_val in zip(input_shape, output_shape):
+            if inp_val != 1 and out_val == 1:
+                return False
+            else:
+                return True
 
     @classmethod
     def accept_pruned_input(cls, node: NNCFNode) -> bool:
@@ -346,7 +371,7 @@ class ReshapePruningOp(BasePruningOp):
         if cls.accept_pruned_input(node):
             if cls._is_flatten(node):
                 FlattenPruningOp.mask_propagation(node, graph, tensor_processor)
-            elif cls._is_not_mixing_dim(node, graph):
+            elif cls._is_not_mixing_dim(node) and cls._is_not_adding_batch_dims(node):
                 identity_mask_propagation(node, graph)
             else:
                 node.data['output_mask'] = None

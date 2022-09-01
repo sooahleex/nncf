@@ -64,7 +64,6 @@ from tests.torch.pruning.helpers import ShuffleNetUnitModel
 from tests.torch.pruning.helpers import ShuffleNetUnitModelDW
 from tests.torch.pruning.helpers import SplitIdentityModel
 from tests.torch.pruning.helpers import get_basic_pruning_config
-from tests.torch.pruning.helpers import GroupNormModel
 from tests.torch.pruning.helpers import SplitMaskPropFailModel
 from tests.torch.pruning.helpers import SplitPruningInvalidModel
 from tests.torch.pruning.helpers import SplitConcatModel
@@ -107,11 +106,6 @@ class GroupPruningModulesTestStruct:
             return self.model.__name__
         assert self.name, 'Can\'t define name from the model (usually due to partial), please specify it explicitly'
         return self.name
-
-    def __str__(self):
-        if hasattr(self.model, '__name__'):
-            return self.model.__name__
-        return self.__class__.__name__
 
 
 GROUP_PRUNING_MODULES_TEST_CASES = [
@@ -472,7 +466,7 @@ GROUP_PRUNING_MODULES_TEST_CASES = [
         pruned_groups_by_node_id=[[1]],
         can_prune_after_analysis={0: True, 1: True, 2: True, 3: True},
         final_can_prune={1: PruningAnalysisDecision(True),
-                         3: PruningAnalysisDecision(False, [PruningAnalysisReason.CLOSING_CONV_MISSING])},
+                         3: PruningAnalysisDecision(False, [PruningAnalysisReason.LAST_CONV])},
         prune_params=(True, True)),
     GroupPruningModulesTestStruct(
         model=SplitMaskPropFailModel,
